@@ -1,80 +1,154 @@
-**🛍️ Retail Sales – SQL Data Analysis Project**
+                      📊 Retail Sales SQL Analysis
+📌 Project Description
 
-This project performs SQL-based analysis on retail sales data to uncover key insights about customer behavior, product categories, and sales trends.
+This project demonstrates SQL-based retail sales analysis on a sample dataset.
+The aim is to explore sales patterns, customer behavior, and product performance through structured queries.
 
-📁 Project Overview
+The queries cover:
 
-Dataset: retail_sales
+Data extraction
 
-Tools: PostgreSQL
+Filtering & conditions
 
-Objective: Answer business questions using SQL queries (filtering, grouping, ranking, CTEs, and window functions).
+Aggregations (SUM, AVG, COUNT)
 
-🧠 Skills Used
+Grouping & Ordering
 
-Filtering & Conditional Queries (WHERE, CASE, BETWEEN)
+Window Functions (RANK, CTEs)
 
-Aggregations (SUM, COUNT, AVG)
+📂 Dataset Information
 
-Grouping & Ordering (GROUP BY, ORDER BY)
+The dataset (retail_sales) contains columns such as:
 
-Window Functions (RANK(), OVER)
+transaction_id
 
-CTEs (WITH Clause)
+sale_date
 
-Date & Time Functions (EXTRACT, TO_CHAR)
+sale_time
 
-🔎 Queries & Insights
+category
 
-Sales on a specific date (2022-11-05).
+customer_id
 
-Clothing transactions with quantity > 4 in Nov-2022.
+gender
 
-Total sales by category (ranked).
+age
 
-Average customer age for Beauty category.
+quantity
 
-High-value transactions (>1000).
+total_sale
 
-Transactions by gender in each category.
+📝 SQL Questions & Queries
+1. Retrieve all sales made on 2022-11-05:
+SELECT *
+FROM retail_sales
+WHERE sale_date = '2022-11-05';
 
-Best selling month in each year (using window functions).
+2. Transactions in 'Clothing' with quantity > 4 (Nov-2022):
+SELECT *
+FROM retail_sales
+WHERE category = 'Clothing'
+  AND quantity >= 4
+  AND TO_CHAR(sale_date, 'YYYY-MM') = '2022-11';
 
-Top 5 customers by total sales.
+3. Total sales for each category:
+SELECT category,
+       SUM(total_sale) AS total_sales
+FROM retail_sales
+GROUP BY category
+ORDER BY total_sales DESC;
 
-Unique customers per category.
+4. Average age of customers who purchased 'Beauty' items:
+SELECT category,
+       ROUND(AVG(age),0) AS avg_age
+FROM retail_sales
+WHERE category = 'Beauty'
+GROUP BY category;
 
-Sales by time shifts (Morning, Afternoon, Evening).
+5. Transactions with sales > 1000:
+SELECT *
+FROM retail_sales
+WHERE total_sale > 1000;
 
-📊 Example Query (Best Selling Month Each Year)
-with mon as (
-    select
-        extract(Year from sale_date) as year,
-        extract(Month from sale_date) as month,
-        round(avg(total_sale)::numeric ,2) as avg_sale,
-        rank() over (
-            partition by extract(Year from sale_date)
-            order by avg(total_sale) desc
-        ) as ranking
-    from retail_sales
-    group by 1 , 2
+6. Number of transactions by gender in each category:
+SELECT category,
+       gender,
+       COUNT(*) AS total_trans
+FROM retail_sales
+GROUP BY category, gender
+ORDER BY category;
+
+7. Best selling month (average sales per month per year):
+WITH mon AS (
+    SELECT EXTRACT(YEAR FROM sale_date) AS year,
+           EXTRACT(MONTH FROM sale_date) AS month,
+           ROUND(AVG(total_sale)::NUMERIC, 2) AS avg_sale,
+           RANK() OVER (PARTITION BY EXTRACT(YEAR FROM sale_date)
+                        ORDER BY AVG(total_sale) DESC) AS ranking
+    FROM retail_sales
+    GROUP BY 1, 2
 )
-select 
-    year,
-    to_char(to_date(month::text , 'MM') , 'Month') as months,
-    avg_sale
-from mon 
-where ranking = 1
-order by ranking;
+SELECT year,
+       TO_CHAR(TO_DATE(month::text, 'MM'), 'Month') AS months,
+       avg_sale
+FROM mon
+WHERE ranking = 1
+ORDER BY ranking;
 
-📂 Files
+8. Top 5 customers based on highest sales:
+SELECT customer_id,
+       SUM(total_sale) AS total_sales
+FROM retail_sales
+GROUP BY customer_id
+ORDER BY total_sales DESC
+LIMIT 5;
 
-retail_sales_analysis.sql → Contains all 10 queries.
+9. Unique customers per category:
+SELECT category,
+       COUNT(DISTINCT customer_id) AS total_unique_custs
+FROM retail_sales
+GROUP BY category
+ORDER BY total_unique_custs DESC;
+
+10. Orders by time shifts (Morning, Afternoon, Evening):
+WITH times AS (
+    SELECT *,
+           CASE 
+               WHEN EXTRACT(HOUR FROM sale_time) < 12 THEN 'Morning'
+               WHEN EXTRACT(HOUR FROM sale_time) BETWEEN 12 AND 17 THEN 'Afternoon'
+               ELSE 'Evening'
+           END AS time_shift
+    FROM retail_sales
+)
+SELECT time_shift,
+       COUNT(*) AS total_orders
+FROM times
+GROUP BY time_shift;
+
+🚀 Key Learnings
+
+Practical usage of WHERE, GROUP BY, ORDER BY
+
+Applying aggregates (SUM, AVG, COUNT)
+
+Handling dates and time shifts
+
+Using CTEs and Window Functions for analytics
+
+Identifying top customers & best-selling months
+
+📎 How to Use
+
+Clone this repo to your local machine.
+
+Import dataset into your SQL database (PostgreSQL recommended).
+
+Run queries from the provided SQL script.
+
+Modify queries for deeper insights.
 
 📜 License
 
-Open-source under the MIT License.
-
-📬 Contact
+This project is licensed under the MIT License – free to use and modify.
 
 🔗 GitHub – Dawood-Ahmed01
